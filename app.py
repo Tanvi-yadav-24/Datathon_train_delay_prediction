@@ -7,41 +7,34 @@ Original file is located at
     https://colab.research.google.com/drive/1LHe1S5RPRB6m_cU_hrFh3RHaKNSZypFW
 """
 
+
 import streamlit as st
 import pandas as pd
-import numpy as np
 import pickle
 
 # Load the trained model
 model = pickle.load(open('trained_rf_model.pkl', 'rb'))
 
 # Title
-st.title("🚦 Train Delay Class Predictor")
-st.markdown("Predict if a train will be on time, slightly delayed, or heavily delayed at a given station.")
+st.title("Train Delay Severity Predictor 🚆")
 
-# --- User Inputs ---
-train_id = st.selectbox("Select Train ID", [1, 2, 3, 4, 5, 6, 7], index=0)
-station_index = st.number_input("Station Index in Route", min_value=1, max_value=100, value=1)
-prev_delay = st.slider("Previous Station Delay (in minutes)", 0, 120, step=1, value=10)
+st.markdown("""
+This app predicts **delay severity class** (Low, Medium, High) at a train station 
+based on its index on the route and the delay at the previous station.
+""")
 
-right = st.slider("Right Time % at this station", 0.0, 100.0, value=80.0)
-slight = st.slider("Slight Delay % (15–60 mins)", 0.0, 100.0, value=10.0)
-significant = st.slider("Significant Delay % (> 60 mins)", 0.0, 100.0, value=10.0)
+# User Inputs (ONLY features model was trained on)
+station_index = st.slider("Station Index", 0, 120, 10)
+prev_delay = st.slider("Previous Station Delay (in minutes)", 0, 120, 5)
 
-# --- Prediction ---
+# Create input DataFrame
+input_df = pd.DataFrame([[station_index, prev_delay]], columns=["Station_Index", "Prev_Delay"])
+
+# Predict
 if st.button("Predict Delay Class"):
-    input_df = pd.DataFrame([{
-        'Train_ID_Code': train_id,
-        'Station_Index': station_index,
-        'Prev_Delay': prev_delay,
-        'Right Time (%)': right,
-        'Slight Delay (%)': slight,
-        'Significant Delay (%)': significant
-    }])
-
     prediction = model.predict(input_df)[0]
-    st.success(f"📍 Predicted Delay Category: **{prediction}**")
-    st.info("🟢 Low = 0–15 min | 🟡 Medium = 15–60 min | 🔴 High = 60+ min")
+    st.success(f"🚦 Predicted Delay Class: **{prediction}**")
+
 
 # Commented out IPython magic to ensure Python compatibility.
 # %pip install streamlit
